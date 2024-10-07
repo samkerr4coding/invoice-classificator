@@ -1,0 +1,11 @@
+chainlit
+langgraph
+langchain
+langchain-community
+langchain-openai
+easyocr
+pdf2image
+pytesseract
+sentence_transformers
+python-dotenv
+pymupdf
