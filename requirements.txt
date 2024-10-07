@@ -9,3 +9,7 @@ pytesseract
 sentence_transformers
 python-dotenv
 pymupdf
+scikit-learn
+pillow
+torch
+transformers

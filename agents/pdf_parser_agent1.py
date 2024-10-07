@@ -1,97 +1,59 @@
-import gc
 import logging
 import threading
+
 import fitz  # PyMuPDF
-import pytesseract
-import torch
-from PIL import Image
 from easyocr import easyocr
-from transformers import LayoutLMv3Processor, LayoutLMv3ForTokenClassification
 
 from agents.base_pdf_parser import BasePDFParser
 
 
 class PDFParserAgent1(BasePDFParser):
-    def __init__(self, model_name="microsoft/layoutlmv3-base"):
-        # Load LayoutLMv3 Processor and Model
-        self.processor = LayoutLMv3Processor.from_pretrained(model_name)
-        self.model = LayoutLMv3ForTokenClassification.from_pretrained(model_name)
-
-    def convert_pdf_to_images(self, pdf_path):
-        """Convert PDF pages to images."""
-        pdf_document = fitz.open(pdf_path)
-        images = []
-        pytesseract.pytesseract.tesseract_cmd = r'/usr/local/bin/tesseract'
-        for page_num in range(len(pdf_document)):
-            page = pdf_document.load_page(page_num)
-            pix = page.get_pixmap()
-            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-            # Save image to disk to visually inspect it
-            img.save(f"page_{page_num}.png")
-            images.append(img)
-
-        return images
-
-    def extract_text_and_boxes(self, images):
-        """Extract text and bounding boxes using OCR."""
-        words_data = []
-
-        for image in images:
-
-            ocr_data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
-            words_data.append(ocr_data)
-
-        return words_data
-
-    def prepare_inputs(self, image, words_data):
-        """Prepare images, words, and boxes for LayoutLMv3."""
-        words = words_data['text']
-        boxes = []
-
-        for i in range(len(words_data['text'])):
-            x, y, w, h = (words_data['left'][i], words_data['top'][i],
-                          words_data['width'][i], words_data['height'][i])
-            # Normalize bounding box to 0-1000 scale as LayoutLMv3 uses it
-            boxes.append([x, y, x + w, y + h])
-
-        encoded_inputs = self.processor(images=image,
-                                        words=words,
-                                        boxes=boxes,
-                                        return_tensors="pt",
-                                        padding="max_length",
-                                        truncation=True)
+    def __init__(self):
+        # Initialize EasyOCR reader once during object creation
+        self.reader = easyocr.Reader(['en', 'fr', 'es', 'it'], gpu=True)  # Use GPU if available
 
     def parse_invoice(self, pdf_content, file_name, chunk_size=5):
-        """Complete process to extract text from a PDF."""
-        # Step 1: Convert PDF to images
-        images = self.convert_pdf_to_images(pdf_content)
+        text_extracted = ""
 
-        # Step 2: Extract text and bounding boxes using OCR
-        ocr_data = self.extract_text_and_boxes(images)
+        # Open the PDF file with PyMuPDF
+        pdf_document = fitz.open(pdf_content)
+        total_pages = len(pdf_document)
 
-        extracted_text = []
+        # Process pages in chunks
+        for start in range(0, total_pages, chunk_size):
+            end = min(start + chunk_size, total_pages)
+            print(f"Processing pages {start + 1} to {end}...")
 
-        # Step 3: Process each page/image with LayoutLMv3
-        for i, image in enumerate(images):
-            encoded_inputs = self.prepare_inputs(image, ocr_data[i])
+            for i in range(start, end):
+                page = pdf_document.load_page(i)  # Load one page at a time
+                pix = page.get_pixmap(dpi=150)  # Render page to image
+                image_path = f'./data/processed/{file_name}_easyocr_page_{i}.png'
+                pix.save(image_path)  # Save the page image
 
-            # Forward pass through LayoutLMv3 model
-            with torch.no_grad():
-                outputs = self.model(**encoded_inputs)
+                # Preprocess the image for better OCR results
+                preprocessed_image = self.preprocess_image(image_path)
 
-            # Get token predictions
-            logits = outputs.logits
-            predictions = torch.argmax(logits, dim=2)
+                # Perform OCR on the preprocessed image
+                results = self.reader.readtext(preprocessed_image, detail=1, min_size=15, contrast_ths=0.5)
 
-            # Convert tokens back to text
-            tokens = self.processor.tokenizer.convert_ids_to_tokens(encoded_inputs['input_ids'][0])
-            pred_labels = [self.model.config.id2label[label_id.item()] for label_id in predictions[0]]
+                # Process OCR results
+                for result in results:
+                    bbox, text, confidence = result
+                    if confidence > 0.3:  # Filter low-confidence results
+                        cleaned_text = self.postprocess_text(text)
+                        text_extracted += cleaned_text + " "
+                        # print(f"File {file_name} Page {i}: Detected text: {cleaned_text} with a confidence of {confidence}")
+                        # print(f"Bounding box: {bbox}")
 
-            # Collect text tokens (if classification-based, change this to extract the label)
-            page_text = " ".join([token for token, label in zip(tokens, pred_labels) if label != "O"])
-            extracted_text.append(page_text)
+                # Clean up memory after processing each page
+                del preprocessed_image, results, pix, page
 
-        return "\n".join(extracted_text)
+            logging.info(f"Finished processing chunk of pages {start + 1} to {end}.")
+            fitz.TOOLS.store_shrink(100)
+
+        pdf_document.close()  # Close the PDF to free resources
+        return text_extracted
+
 
 def run(state):
     try:

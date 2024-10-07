@@ -5,7 +5,6 @@ import threading
 
 from langchain.agents import initialize_agent, AgentType
 from langchain_community.agent_toolkits import FileManagementToolkit
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import AzureChatOpenAI
 
 from prompts.classification_prompt import classification_prompt
@@ -14,13 +13,10 @@ from prompts.classification_prompt import classification_prompt
 class ClassificationAgent:
     def __init__(self):
         # Initialize LLM
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash-latest",
-            temperature=0,
-            max_tokens=None,
-            timeout=None,
-            max_retries=2,
-            # other params...
+        self.llm = AzureChatOpenAI(
+            azure_deployment=os.environ.get('AZURE_OPENAI_DEPLOYEMENT_NAME'),
+            api_version=os.environ.get('AZURE_OPENAI_API_VERSION'),
+            name="llm"
         )
         # Define the File SYstem tools
         self.working_directory = os.path.abspath('./')
