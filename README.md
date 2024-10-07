@@ -1,5 +1,5 @@
 # invoice-classificator
-Automating pdf Invoice (or any kind of document) Classification with Chainlit, Langraph, Gemini Flash, Tesseract, and EasyOCR
+Automating pdf Invoice (or any kind of document) Classification with Chainlit, Langraph, Azure openai gpt, Tesseract, and EasyOCR
 
 ## Summary
 
@@ -25,7 +25,7 @@ This project leverages several open-source libraries and tools:
 
 - **langgraph**: Workflow management and orchestration.
 - **langchain**: Integration of language models with a variety of tools and applications.
-- **langchain_google_genai**: Access to OpenAI and Azure-based language models.
+- **langchain-openai**: Access to OpenAI and Azure-based language models.
 - **langchain-ollama**: Interface for running local LLMs using Ollama.
 - **EasyOCR**: Lightweight OCR library for extracting text from images.
 - **Tesseract**: Google's OCR engine.
@@ -39,9 +39,7 @@ This project leverages several open-source libraries and tools:
 
 ### .env file
 
-### Google api Key
-
-
+### Azure configuration api Key
 
 ### Python Requirements
 
