@@ -39,7 +39,30 @@ This project leverages several open-source libraries and tools:
 
 ### .env file
 
-### Azure configuration api Key
+copy/paste the env.example file and fill required env variables :
+
+```
+#NON LOCAL AZURE
+AZURE_OPENAI_API_KEY=<KEY>
+AZURE_OPENAI_ENDPOINT="https://your-instance.azure.com/"
+AZURE_OPENAI_DEPLOYEMENT_NAME="your-deployment-gpt-35-turbo-16k"
+AZURE_OPENAI_API_VERSION="2024-02-15-preview"
+
+#LANGCHAIN AND LANGSMITH
+LANGCHAIN_API_KEY="LANGCHAIN_API_KEY"
+LANGCHAIN_TRACING_V2="true"
+LANGCHAIN_PROJECT="Invoice Classificator"
+
+#TESSERACT beware the path can vary depending on host vs container execution
+# For Docker runtime
+TESSDATA_PREFIX="/usr/share/tesseract-ocr/5/tessdata"
+# For hosted runtime
+#TESSDATA_PREFIX="/usr/share/tessdata"
+```
+
+*Note*: 
+- For Tesseract it is important to report properly the right path for your tessdata folder.
+- For Langsmith if activated (true) you'll need to [create a Langsmith Api Key](https://docs.smith.langchain.com/how_to_guides/setup/create_account_api_key)
 
 ### Python Requirements
 
@@ -50,46 +73,32 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-To run the application:
+To run the application there are two alternatives :
 
+#### plain runtime
 ```angular2html
 python app.py
 ```
 
-Usage
+#### Docker
+```angular2html
+docker compose up --build
+```
+
+## Usage
 
 Once the dependencies are installed and the app is running, follow these steps to classify your PDF invoices or documents:
 
+    
     Upload a PDF Document:
-        After launching the app, upload your desired PDF file. The system will automatically process the file using multiple OCR engines.
+        After launching the app, upload your desired PDF file in the project /input folder. 
+        
+    Go onto the UI and trigger processing:
+        http://localhost:8080 and click on the process button
 
-    View OCR Results:
-        The tool extracts text from the document using Tesseract, EasyOCR, and other engines, presenting a comparative analysis.
-
-    Review AI-Powered Assessment:
-        The extracted text is passed through an LLM for assessment, where a summary is generated, and the similarity between the OCR results is calculated.
-
-    Download or View Results:
-        The final output can be downloaded or reviewed directly within the Chainlit UI.
-
-Configuration
-
-You can configure the tool to use either a remote Azure OpenAI service or run an LLM locally using Ollama:
-
-    Remote LLM:
-        Add your Azure OpenAI API key in the environment configuration file:
-
-        bash
-
-    OPENAI_API_KEY=your-openai-api-key
-
-Local LLM (using Ollama):
-
-    To run the LLM locally, ensure that you have installed Ollama, and specify the model you'd like to use:
-
-    bash
-
-        OLLAMA_MODEL="your-local-model"
+    Summary and results:
+        The summarized final output can be reviewed directly within the Chainlit UI.
+        You'll find as well in outputs folders (high, medium or low similarity) the pdf and it's markdown report.
 
 Contributing
 
