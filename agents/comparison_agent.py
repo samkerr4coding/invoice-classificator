@@ -5,7 +5,7 @@ import threading
 
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_core.messages import HumanMessage
-from langchain_openai import AzureChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from sklearn.metrics.pairwise import cosine_similarity
 
 from prompts.comparison_prompt import comparison_prompt
@@ -16,11 +16,14 @@ class ComparisonAgent:
         # Initialize Sentence Transformer model for embeddings
         self.embedding_model = SentenceTransformerEmbeddings(model_name=model_name)
         # Initialize LLM (local or Azure-based)
-        self.llm = AzureChatOpenAI(
-            azure_deployment=os.environ.get('AZURE_OPENAI_DEPLOYEMENT_NAME'),
-            api_version=os.environ.get('AZURE_OPENAI_API_VERSION'),
-            name="llm"
-        )
+        self.llm =  ChatGoogleGenerativeAI(
+                        model="gemini-1.5-flash-latest",
+                        temperature=0,
+                        max_tokens=None,
+                        timeout=None,
+                        max_retries=2,
+                        # other params...
+                    )
 
     def compute_embedding(self, text):
         """

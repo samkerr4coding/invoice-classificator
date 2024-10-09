@@ -2,7 +2,7 @@ chainlit
 langgraph
 langchain
 langchain-community
-langchain-openai
+langchain-google-genai
 easyocr
 pdf2image
 pytesseract
