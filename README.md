@@ -1,5 +1,5 @@
 # invoice-classificator
-Automating pdf Invoice (or any kind of document) Classification with Chainlit, Langraph, Azure openai gpt, Tesseract, and EasyOCR
+Automating pdf Invoice (or any kind of document) Classification with Chainlit, Langraph, Gemini Flash, Tesseract, and EasyOCR
 
 ## Summary
 
@@ -42,11 +42,8 @@ This project leverages several open-source libraries and tools:
 copy/paste the env.example file and fill required env variables :
 
 ```
-#NON LOCAL AZURE
-AZURE_OPENAI_API_KEY=<KEY>
-AZURE_OPENAI_ENDPOINT="https://your-instance.azure.com/"
-AZURE_OPENAI_DEPLOYEMENT_NAME="your-deployment-gpt-35-turbo-16k"
-AZURE_OPENAI_API_VERSION="2024-02-15-preview"
+#GOOGLE GEMINI API
+GOOGLE_API_KEY="GOOGLE_API_KEY"
 
 #LANGCHAIN AND LANGSMITH
 LANGCHAIN_API_KEY="LANGCHAIN_API_KEY"
